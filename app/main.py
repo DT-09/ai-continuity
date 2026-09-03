@@ -13,22 +13,18 @@ app = FastAPI(
 )
 
 
-# Allow the Next.js frontend to communicate with the FastAPI backend.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://ai-continuity.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# -----------------------------
-# Request models
-# -----------------------------
 
 class DependencyInput(BaseModel):
     application: str
@@ -45,9 +41,13 @@ class AnalysisRequest(BaseModel):
     dependencies: list[DependencyInput]
 
 
-# -----------------------------
-# Health check
-# -----------------------------
+@app.get("/")
+def root():
+    return {
+        "service": "AI Continuity",
+        "status": "online",
+    }
+
 
 @app.get("/api/health")
 def health():
@@ -57,13 +57,8 @@ def health():
     }
 
 
-# -----------------------------
-# AI dependency analysis
-# -----------------------------
-
 @app.post("/api/analyze")
 def analyze(request: AnalysisRequest):
-
     dependencies = [
         AIDependency(
             application=dependency.application,
