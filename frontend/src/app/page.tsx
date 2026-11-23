@@ -28,7 +28,7 @@ type AnalysisResult = {
   findings: Finding[];
 };
 
-const API_URL = "https://ai-continuity-api.onrender.com";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://ai-continuity-api.onrender.com").replace(/\/+$/, "");
 
 function createDependency(): Dependency {
   return {

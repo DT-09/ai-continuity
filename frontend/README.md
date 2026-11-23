@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Continuity frontend
 
-## Getting Started
+The web interface maps AI applications to their providers, models, business processes, revenue exposure and fallback arrangements. It submits the dependency inventory to the AI Continuity API and renders the resulting continuity score and risk findings.
 
-First, run the development server:
+## Requirements
 
-```bash
+- Node.js 22
+- npm
+- A reachable AI Continuity API instance
+
+## Local setup
+
+```sh
+cp .env.example .env.local
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `NEXT_PUBLIC_API_URL` in `.env.local` to the base URL of the API. The default points to the configured hosted API. The value is public browser configuration; never place secrets, access tokens or private credentials in it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+npm run lint
+npm run build
+```
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Configure `NEXT_PUBLIC_API_URL` in the frontend hosting provider before building. Next.js embeds public environment variables into the client bundle at build time, so changing the value requires a new build and deployment.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The API must allow browser requests from the deployed frontend origin. A successful frontend build does not prove API reachability; verify the health endpoint and submit a representative analysis after deployment.

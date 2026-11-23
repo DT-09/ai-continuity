@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, field_validator
 
 from .engine import analyze_dependencies
 from .models import AIDependency
@@ -27,18 +29,34 @@ app.add_middleware(
 
 
 class DependencyInput(BaseModel):
-    application: str
-    provider: str
-    model: str
-    business_process: str
-    annual_revenue_exposure: float = Field(ge=0)
-    criticality: str
-    fallback_provider: str | None = None
+    application: str = Field(min_length=1, max_length=120)
+    provider: str = Field(min_length=1, max_length=120)
+    model: str = Field(min_length=1, max_length=120)
+    business_process: str = Field(min_length=1, max_length=160)
+    annual_revenue_exposure: float = Field(ge=0, le=1_000_000_000_000)
+    criticality: Literal["low", "medium", "high", "critical"]
+    fallback_provider: str | None = Field(default=None, max_length=120)
     fallback_validated: bool = False
+
+    @field_validator("application", "provider", "model", "business_process")
+    @classmethod
+    def reject_blank_required_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Field must contain non-whitespace text")
+        return normalized
+
+    @field_validator("fallback_provider")
+    @classmethod
+    def normalize_fallback_provider(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 
 class AnalysisRequest(BaseModel):
-    dependencies: list[DependencyInput]
+    dependencies: list[DependencyInput] = Field(max_length=100)
 
 
 @app.get("/")
