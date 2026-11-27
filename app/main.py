@@ -7,13 +7,11 @@ from pydantic import BaseModel, Field, field_validator
 from .engine import analyze_dependencies
 from .models import AIDependency
 
-
 app = FastAPI(
     title="AI Continuity",
-    description="AI dependency and business continuity risk analysis.",
-    version="0.1.0",
+    description="Evidence-led inventory and triage of AI provider dependencies and continuity gaps.",
+    version="0.2.0",
 )
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,8 +21,8 @@ app.add_middleware(
         "https://ai-continuity.vercel.app",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
@@ -64,46 +62,54 @@ def root():
     return {
         "service": "AI Continuity",
         "status": "online",
+        "version": app.version,
+        "docs": "/docs",
     }
 
 
 @app.get("/api/health")
 def health():
-    return {
-        "status": "ok",
-        "service": "ai-continuity",
-    }
+    return {"status": "ok", "service": "ai-continuity", "version": app.version}
 
 
 @app.post("/api/analyze")
 def analyze(request: AnalysisRequest):
     dependencies = [
         AIDependency(
-            application=dependency.application,
-            provider=dependency.provider,
-            model=dependency.model,
-            business_process=dependency.business_process,
-            annual_revenue_exposure=dependency.annual_revenue_exposure,
-            criticality=dependency.criticality,
-            fallback_provider=dependency.fallback_provider,
-            fallback_validated=dependency.fallback_validated,
+            application=item.application,
+            provider=item.provider,
+            model=item.model,
+            business_process=item.business_process,
+            annual_revenue_exposure=item.annual_revenue_exposure,
+            criticality=item.criticality,
+            fallback_provider=item.fallback_provider,
+            fallback_validated=item.fallback_validated,
         )
-        for dependency in request.dependencies
+        for item in request.dependencies
     ]
-
     result = analyze_dependencies(dependencies)
-
     return {
-        "continuity_score": result.continuity_score,
+        "assessment_type": "AI_PROVIDER_CONTINUITY_TRIAGE",
+        "scoring_version": result.scoring_version,
+        "risk_score": result.risk_score,
+        "risk_band": result.risk_band,
+        "score_semantics": (
+            "Deterministic rule-based prioritisation index; not a probability, "
+            "expected-loss estimate, audit opinion or certification."
+        ),
         "total_dependencies": result.total_dependencies,
         "critical_dependencies": result.critical_dependencies,
         "unvalidated_fallbacks": result.unvalidated_fallbacks,
         "findings": [
             {
+                "rule_id": finding.rule_id,
                 "severity": finding.severity,
+                "points": finding.points,
                 "title": finding.title,
                 "explanation": finding.explanation,
                 "financial_exposure": finding.financial_exposure,
+                "recommended_action": finding.recommended_action,
+                "evidence_status": finding.evidence_status,
             }
             for finding in result.findings
         ],
