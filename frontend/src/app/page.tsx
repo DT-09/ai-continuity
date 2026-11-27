@@ -14,14 +14,22 @@ type Dependency = {
 };
 
 type Finding = {
+  rule_id: string;
   severity: string;
+  points: number;
   title: string;
   explanation: string;
   financial_exposure: number;
+  recommended_action: string;
+  evidence_status: string;
 };
 
 type AnalysisResult = {
-  continuity_score: number;
+  assessment_type: string;
+  scoring_version: string;
+  risk_score: number | null;
+  risk_band: "UNKNOWN" | "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  score_semantics: string;
   total_dependencies: number;
   critical_dependencies: number;
   unvalidated_fallbacks: number;
@@ -110,13 +118,6 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function scoreLabel(score: number) {
-    if (score >= 80) return "Strong";
-    if (score >= 60) return "Moderate";
-    if (score >= 40) return "Weak";
-    return "Critical";
   }
 
   return (
@@ -345,9 +346,9 @@ export default function Home() {
 
             <div className="grid gap-4 md:grid-cols-4">
               <Metric
-                label="Continuity Score"
-                value={`${result.continuity_score}/100`}
-                subtitle={scoreLabel(result.continuity_score)}
+                label="Triage risk index"
+                value={result.risk_score === null ? "Unknown" : `${result.risk_score}/100`}
+                subtitle={result.risk_band}
               />
 
               <Metric
@@ -368,7 +369,7 @@ export default function Home() {
 
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
               <h3 className="text-xl font-semibold">
-                Risk Findings
+                Findings & recommended actions
               </h3>
 
               {result.findings.length === 0 ? (
@@ -386,7 +387,7 @@ export default function Home() {
                       <div className="flex flex-col justify-between gap-3 md:flex-row">
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                            {finding.severity}
+                            {finding.severity} · {finding.rule_id} · {finding.points} points
                           </div>
 
                           <h4 className="mt-2 font-semibold">
@@ -395,6 +396,12 @@ export default function Home() {
 
                           <p className="mt-2 text-sm leading-6 text-gray-400">
                             {finding.explanation}
+                          </p>
+                          <p className="mt-3 text-sm text-gray-200">
+                            <strong>Next action:</strong> {finding.recommended_action}
+                          </p>
+                          <p className="mt-2 text-xs text-gray-500">
+                            Evidence status: {finding.evidence_status}
                           </p>
                         </div>
 
@@ -413,21 +420,18 @@ export default function Home() {
 
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
               <h3 className="text-2xl font-semibold">
-                Want the full continuity assessment?
+                What this result does—and does not—establish
               </h3>
 
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-400">
-                Identify hidden AI concentration risks, quantify business
-                impact, evaluate fallback options, and build a practical
-                recovery strategy.
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-gray-400">
+                This is a deterministic triage index based on the information entered.
+                It is not a probability of outage, an expected-loss estimate, a tested
+                failover, or an independent assurance assessment. Validate each finding
+                with service owners and retain evidence from controlled recovery tests.
               </p>
-
-              <button
-                type="button"
-                className="mt-6 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-gray-200"
-              >
-                Request Full Assessment
-              </button>
+              <p className="mt-4 text-xs text-gray-500">
+                Scoring version {result.scoring_version}. {result.score_semantics}
+              </p>
             </div>
           </section>
         )}
