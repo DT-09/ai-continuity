@@ -11,7 +11,7 @@ def test_root_and_health_endpoints_report_service_status():
     health = client.get("/api/health")
 
     assert root.status_code == 200
-    assert root.json() == {"service": "AI Continuity", "status": "online"}
+    assert root.json() == {"service": "AI Continuity", "status": "online", "version": "0.2.0", "docs": "/docs"}
     assert health.status_code == 200
     assert health.json() == {"status": "ok", "service": "ai-continuity"}
 
